@@ -1,0 +1,82 @@
+var POST_URL = "https://discordapp.com/api/webhooks/747887679173034014/MU-Mt4-GOyrovZAl9zBe-x_JEEFPywTxciorIiPuYR7dbDL2T_V5BgbUd-FTUr_23GEI"
+
+function onSubmit(e) {
+    var form = FormApp.getActiveForm();
+    var allResponses = form.getResponses();
+    var latestResponse = allResponses[allResponses.length - 1];
+    var response = latestResponse.getItemResponses();
+    var items = [];
+
+  
+    var d = new Date();
+    if (d.getMonth() + 1 < 10) {
+    var m = '-0' + (d.getMonth() + 1);
+  } else {
+    var m = '-' + (d.getMonth() + 1);
+  }
+    
+  if (d.getDate() < 10) {
+    var day = '0' + d.getDate();
+  } else {
+    var day = d.getDate();
+  }
+    var y = '-' + d.getFullYear();
+    var h = ' ' + d.getHours() + ':';
+    var min = d.getMinutes();  
+    var date = [day, m, y, h, min].join('');
+  
+    for (var i = 0; i < response.length; i++) {
+        var question = response[i].getItem().getTitle();
+        var answer = response[i].getResponse();
+        try {
+            var parts = answer.match(/[\s\S]{1,1024}/g) || [];
+        } catch (e) {
+            var parts = answer;
+        }
+
+        if (answer == "") {
+            continue;
+        }
+      
+        for (var j = 0; j < parts.length; j++) {
+            if (j == 0) {
+                items.push({
+                    "name": question,
+                    "value": parts[j],
+                    "inline": false
+                });
+            } else {
+                items.push({
+                    "name": question.concat(" (cont.)"),
+                    "value": parts[j],
+                    "inline": false
+                });
+            }
+        }
+    }
+  
+    items.push({
+      "name": "Дата подачи заявки:",
+      "value": date,
+      "inline": false
+    });
+
+    var options = {
+        "method": "post",
+        "headers": {
+            "Content-Type": "application/json",
+        },
+        "payload": JSON.stringify({
+            "embeds": [{
+                "title": "Начало заявки",
+                "fields": items,
+                "color": "10181046",
+                "footer": {
+                    "text": "Конец заявки"
+                }
+            }]
+        })
+    };
+
+    UrlFetchApp.fetch(POST_URL, options);
+};
